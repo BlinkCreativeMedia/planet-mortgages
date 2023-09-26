@@ -1,0 +1,110 @@
+<form>
+  <div class="grid grid-cols-2 gap-6">
+    <div>
+      <label for="price" class="form-label">
+        House price
+      </label>
+
+      <div class="mt-1">
+        <input type="number" id="price" class="form-input" value="250000" data-mortgage-target="price" data-action="mortgage#calculate">
+      </div>
+
+    </div>
+
+    <div>
+      <label for="deposit" class="form-label">
+        Total deposit
+      </label>
+
+      <div class="mt-1">
+        <input type="number" id="deposit" value="25000" class="form-input" data-mortgage-target="deposit" data-action="mortgage#calculate">
+      </div>
+    </div>
+  </div>
+</form>
+<div class="px-8 py-6 font-medium border-2 rounded border-secondary">
+  <div class="grid items-center grid-cols-2 gap-y-2 gap-x-8 text-secondary">
+    <p class="pm-title pm-title--xs">Mortgage</p>
+    <p class="pm-title pm-title--sm" data-mortgage-target="mortgage">£225,000</p>
+  </div>
+
+  <div class="grid items-center grid-cols-2 mt-1 gap-y-2 gap-x-8 text-primary">
+    <p class="pm-title pm-title--xs">Interest *</p>
+    <p>
+      <span class="pm-title pm-title--sm" data-mortgage-target="interest">£375</span>
+      <span>a month</span>
+    </p>
+  </div>
+
+  <div class="grid items-center grid-cols-2 mt-1 gap-y-2 gap-x-8 text-primary">
+    <p class="pm-title pm-title--xs">Repayment *</p>
+    <p>
+      <span class="pm-title pm-title--sm" data-mortgage-target="repayment">£832</span>
+      <span>a month</span>
+    </p>
+  </div>
+</div>
+<a class="btn btn--secondary w-full" href="/contact">Get Free Advice</a>
+
+<script>
+    import { Controller } from 'stimulus'
+
+export default class extends Controller {
+  static targets = ['price', 'deposit', 'mortgage', 'interest', 'repayment']
+
+  connect() {
+    this.calculate()
+  }
+
+  calculate() {
+    const price = this.priceTarget.value
+    const deposit = this.depositTarget.value
+    const rate = 2
+    const term = 30
+
+    this.price = price
+
+    this.mortgageCost(price, deposit)
+    this.repaymentCost(rate, term)
+    this.interestCost(rate)
+  }
+
+  // private
+
+  mortgageCost(price, deposit) {
+    const value = price - deposit
+
+    this.mortgage = value.toFixed(2)
+    this.mortgageTarget.innerText = value ? this.money(value) : '---'
+  }
+
+  interestCost(rate) {
+    const p = this.mortgage
+    const i = rate
+    const cost = ((p / 100) * i) / 12
+
+    this.interest = cost.toFixed(2)
+    this.interestTarget.innerText = cost ? this.money(cost) : '---'
+  }
+
+  repaymentCost(rate, term) {
+    const p = this.mortgage
+    const i = rate / 100 / 12
+    const n = term * 12
+
+    const cost = (p * i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1)
+
+    this.repayment = cost.toFixed(2)
+    this.repaymentTarget.innerText =
+      cost && cost !== Infinity ? this.money(cost) : '---'
+  }
+
+  money(value) {
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+      maximumSignificantDigits: 3,
+    }).format(value)
+  }
+}
+</script>
